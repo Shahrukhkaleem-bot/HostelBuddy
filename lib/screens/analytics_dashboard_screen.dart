@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../core/constants.dart';
+import '../core/hostel_search.dart';
 import '../models/complete_models.dart';
 
 class AnalyticsDashboardScreen extends StatefulWidget {
@@ -100,7 +101,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                   child: _KPICard(
                     icon: FontAwesomeIcons.moneyBill,
                     title: 'Revenue',
-                    value: '₨$avgRevenuePerMonth',
+                    value: money(avgRevenuePerMonth),
                     subtitle: 'This month',
                     color: AppColors.green,
                     trend: '+12%',
@@ -253,7 +254,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                         ),
                       ),
                       Text(
-                        '₨$revenue',
+                        money(revenue),
                         style: const TextStyle(
                           fontSize: AppTypography.fontSize_lg,
                           fontWeight: FontWeight.w700,
@@ -505,7 +506,7 @@ class _RevenueItem extends StatelessWidget {
               ),
             ),
             Text(
-              '₨$amount',
+              money(amount),
               style: const TextStyle(
                 fontSize: AppTypography.fontSize_sm,
                 fontWeight: FontWeight.w700,
