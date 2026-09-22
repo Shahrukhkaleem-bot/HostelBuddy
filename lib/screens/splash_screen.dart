@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../core/app_store.dart';
 import '../core/auth_service.dart';
 import '../core/constants.dart';
 
@@ -42,7 +41,6 @@ class _SplashScreenState extends State<SplashScreen>
     if (!auth.isSignedIn) return '/google-auth';
     final role = auth.role;
     if (role == null) return '/role-selection';
-    AppStore.instance.setRole(role);
     return role == 'student' ? '/student-main' : '/warden-home';
   }
 

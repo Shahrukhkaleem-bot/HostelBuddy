@@ -1,48 +1,280 @@
 import 'package:flutter/material.dart';
-import '../core/app_store.dart';
-import '../core/auth_service.dart';
-import '../models/bid_models.dart';
-import '../widgets/marketplace_widgets.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../core/constants.dart';
+import '../widgets/app_button.dart';
 
 class WardenHomeScreen extends StatelessWidget {
-  const WardenHomeScreen({super.key});
+  const WardenHomeScreen({Key? key}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) => StoreBuilder(builder: (context, store) {
-    final hostel = store.selectedHostel;
-    return Scaffold(appBar: AppBar(title: const Text('Manager workspace'), automaticallyImplyLeading: false,
-      actions: [IconButton(tooltip: 'Switch demo role', onPressed: () =>
-        Navigator.pushNamedAndRemoveUntil(context, '/role-selection', (_) => false), icon: const Icon(Icons.switch_account))]),
-      body: PageBody(children: [
-        const DemoNotice(),
-        if (store.hostels.isNotEmpty) DropdownButtonFormField<int>(
-          key: ValueKey(store.selectedHostelId), initialValue: hostel?.id, isExpanded: true,
-          decoration: const InputDecoration(labelText: 'Selected demo hostel'),
-          items: store.hostels.map((h) => DropdownMenuItem(value: h.id, child: Text(h.name))).toList(),
-          onChanged: (id) { if (id != null) store.selectHostel(id); }),
-        const SizedBox(height: 16),
-        if (hostel != null) ...[
-          Text(hostel.city, style: Theme.of(context).textTheme.titleMedium),
-          Text('${hostel.rooms.fold<int>(0, (n, r) => n + r.availableBeds)} available beds • ${hostel.rooms.length} rooms'),
-          Text('${store.bids.where((b) => b.hostelId == hostel.id && b.status == BidStatus.accepted).length} accepted demo offers'),
-          const SizedBox(height: 20),
-          _action(context, 'Student requests', Icons.search, '/warden-dashboard'),
-          _action(context, 'My bids', Icons.inbox_outlined, '/manager-bids'),
-          _action(context, 'Connected leads', Icons.contacts_outlined, '/connected-leads'),
-          _action(context, 'Edit hostel details', Icons.edit_outlined, '/edit-hostel', hostel.id),
-          _action(context, 'Manage rooms', Icons.bed_outlined, '/manage-rooms', hostel.id),
-          _action(context, 'Analytics', Icons.insights, '/analytics-dashboard', hostel.id),
-        ],
-        _action(context, 'Register another hostel', Icons.add_business, '/hostel-registration'),
-        TextButton(onPressed: () async {
-          final navigator = Navigator.of(context);
-          await AuthService.instance.signOut();
-          store.signOut();
-          navigator.pushNamedAndRemoveUntil('/google-auth', (_) => false);
-        }, child: const Text('Sign out')),
-      ]));
-  });
-  Widget _action(BuildContext context, String title, IconData icon, String route, [Object? args]) =>
-    Padding(padding: const EdgeInsets.only(bottom: 10), child: OutlinedButton.icon(
-      onPressed: () => Navigator.pushNamed(context, route, arguments: args),
-      icon: Icon(icon), label: Text(title)));
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.gray50,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.space5),
+              decoration: const BoxDecoration(
+                color: AppColors.white,
+                border: Border(
+                  bottom: BorderSide(color: AppColors.gray100),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Hostel Manager',
+                        style: TextStyle(
+                          fontSize: AppTypography.fontSize_lg,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.navy,
+                          fontFamily: AppTypography.fontFamily,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Green Valley Hostel',
+                        style: TextStyle(
+                          fontSize: AppTypography.fontSize_sm,
+                          color: AppColors.gray500,
+                          fontFamily: AppTypography.fontFamily,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: AppColors.green,
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        FontAwesomeIcons.hotel,
+                        color: AppColors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.space5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Quick Stats
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding:
+                                const EdgeInsets.all(AppSpacing.space4),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.md),
+                              border: Border.all(
+                                  color: AppColors.gray100),
+                            ),
+                            child: Column(
+                              children: const [
+                                Icon(
+                                  FontAwesomeIcons.doorOpen,
+                                  color: AppColors.navy,
+                                  size: 24,
+                                ),
+                                SizedBox(height: AppSpacing.space2),
+                                Text(
+                                  '12',
+                                  style: TextStyle(
+                                    fontSize:
+                                        AppTypography.fontSize_2xl,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.navy,
+                                    fontFamily: AppTypography
+                                        .fontFamily,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Vacancies',
+                                  style: TextStyle(
+                                    fontSize: AppTypography.fontSize_xs,
+                                    color: AppColors.gray500,
+                                    fontFamily: AppTypography
+                                        .fontFamily,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.space3),
+                        Expanded(
+                          child: Container(
+                            padding:
+                                const EdgeInsets.all(AppSpacing.space4),
+                            decoration: BoxDecoration(
+                              color: AppColors.greenBg,
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.md),
+                              border: Border.all(
+                                  color: AppColors.green),
+                            ),
+                            child: Column(
+                              children: const [
+                                Icon(
+                                  FontAwesomeIcons.users,
+                                  color: AppColors.green,
+                                  size: 24,
+                                ),
+                                SizedBox(height: AppSpacing.space2),
+                                Text(
+                                  '8',
+                                  style: TextStyle(
+                                    fontSize:
+                                        AppTypography.fontSize_2xl,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.green,
+                                    fontFamily: AppTypography
+                                        .fontFamily,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Matches',
+                                  style: TextStyle(
+                                    fontSize: AppTypography.fontSize_xs,
+                                    color: AppColors.greenDark,
+                                    fontFamily: AppTypography
+                                        .fontFamily,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.space5),
+
+                    // Action Buttons
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        text: 'View Dashboard',
+                        onPressed: () => Navigator.pushNamed(
+                          context,
+                          '/warden-dashboard',
+                        ),
+                        icon: FontAwesomeIcons.chartLine,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.space3),
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        text: 'Connected Leads',
+                        onPressed: () => Navigator.pushNamed(
+                          context,
+                          '/connected-leads',
+                        ),
+                        variant: 'outline',
+                        icon: FontAwesomeIcons.phoneVolume,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.space5),
+
+                    // Recent Bids
+                    const Text(
+                      'Recent Bids Submitted',
+                      style: TextStyle(
+                        fontSize: AppTypography.fontSize_base,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.navy,
+                        fontFamily: AppTypography.fontFamily,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.space3),
+                    Container(
+                      padding:
+                          const EdgeInsets.all(AppSpacing.space4),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(color: AppColors.gray100),
+                      ),
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: const [
+                              Text(
+                                'HB-2049 (2-Seater)',
+                                style: TextStyle(
+                                  fontSize: AppTypography.fontSize_sm,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.gray900,
+                                  fontFamily: AppTypography
+                                      .fontFamily,
+                                ),
+                              ),
+                              Text(
+                                'PKR 38,000',
+                                style: TextStyle(
+                                  fontSize: AppTypography.fontSize_sm,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.green,
+                                  fontFamily: AppTypography
+                                      .fontFamily,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.space2),
+                          Row(
+                            children: const [
+                              Icon(
+                                FontAwesomeIcons.clock,
+                                size: 12,
+                                color: AppColors.gray500,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Submitted 2 hours ago',
+                                style: TextStyle(
+                                  fontSize: AppTypography.fontSize_xs,
+                                  color: AppColors.gray500,
+                                  fontFamily: AppTypography
+                                      .fontFamily,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

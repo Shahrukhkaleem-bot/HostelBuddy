@@ -1,83 +1,181 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import '../core/app_store.dart';
-import '../core/hostel_search.dart';
-import '../widgets/marketplace_widgets.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../core/constants.dart';
+import '../widgets/app_button.dart';
+import '../widgets/app_input.dart';
+import '../utils/toast_helper.dart';
 
 class ManagerPostBidScreen extends StatefulWidget {
-  final int? requirementId;
-  const ManagerPostBidScreen({super.key, this.requirementId});
+  const ManagerPostBidScreen({Key? key}) : super(key: key);
+
   @override
   State<ManagerPostBidScreen> createState() => _ManagerPostBidScreenState();
 }
+
 class _ManagerPostBidScreenState extends State<ManagerPostBidScreen> {
-  final form = GlobalKey<FormState>();
-  final price = TextEditingController();
-  final note = TextEditingController();
-  int? requirementId;
-  int? roomId;
-  bool submitted = false;
+  // Set once the success pop is scheduled, so repeat taps can't pop twice.
+  bool _isSubmitting = false;
+  final studentNameController = TextEditingController();
+  final priceController = TextEditingController();
+  final roomTypeController = TextEditingController();
+
+  // Wallet
+  int managerCoins = 8000;
+  static const int POST_BID_COIN_COST = 50;
+
   @override
-  void initState() { super.initState(); requirementId = widget.requirementId; }
-  @override
-  void dispose() { price.dispose(); note.dispose(); super.dispose(); }
-  void submit() {
-    if (submitted || !form.currentState!.validate()) return;
-    final store = AppStore.instance;
-    if (requirementId == null || roomId == null || store.selectedHostelId == null) {
-      showMessage(context, 'Choose a request and an available room.'); return;
-    }
-    final error = store.postBid(requirementId: requirementId!, hostelId: store.selectedHostelId!,
-      roomId: roomId!, price: int.parse(price.text.trim()), note: note.text);
-    if (error != null) { showMessage(context, error); return; }
-    submitted = true;
-    showMessage(context, 'Demo offer posted. 50 demo coins deducted.');
-    Navigator.pop(context, true);
+  void dispose() {
+    studentNameController.dispose();
+    priceController.dispose();
+    roomTypeController.dispose();
+    super.dispose();
   }
+
+  void submitBid() {
+    if (_isSubmitting) return;
+    if (studentNameController.text.isEmpty) {
+      ToastHelper.showError(context, message: 'Please enter student name');
+      return;
+    }
+    if (priceController.text.isEmpty) {
+      ToastHelper.showError(context, message: 'Please enter bid price');
+      return;
+    }
+    if (roomTypeController.text.isEmpty) {
+      ToastHelper.showError(context, message: 'Please enter room type');
+      return;
+    }
+
+    final price = int.tryParse(priceController.text) ?? 0;
+    if (price < 5000) {
+      ToastHelper.showError(context, message: 'Price must be at least ₨5,000');
+      return;
+    }
+
+    // Check coins
+    if (managerCoins < POST_BID_COIN_COST) {
+      ToastHelper.showError(
+        context,
+        message: 'Insufficient coins! Need ${POST_BID_COIN_COST} coins to post bid.',
+      );
+      return;
+    }
+
+    // Deduct coins
+    setState(() {
+      managerCoins -= POST_BID_COIN_COST;
+    });
+
+    ToastHelper.showSuccess(
+      context,
+      message: '✓ Bid posted! -${POST_BID_COIN_COST} coins deducted',
+    );
+    _isSubmitting = true;
+    Future.delayed(const Duration(seconds: 2), () {
+      // Skip if the user already left, or another screen is now on top.
+      if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+      Navigator.pop(context);
+    });
+  }
+
   @override
-  Widget build(BuildContext context) => StoreBuilder(builder: (context, store) {
-    final hostel = store.selectedHostel;
-    if (hostel == null) return const UnavailableScreen(message: 'Register or select a hostel first.');
-    final request = store.requirement(requirementId);
-    final rooms = hostel.rooms.where((r) => r.availableBeds > 0 && (request == null || r.type == request.roomType)).toList();
-    final requests = store.requirements;
-    return Scaffold(appBar: AppBar(title: const Text('Post an offer')),
-      body: Form(key: form, child: PageBody(children: [
-        const DemoNotice(),
-        Text(hostel.name, style: Theme.of(context).textTheme.titleLarge),
-        Text('${store.managerCoins} demo coins • Posting costs 50'),
-        const SizedBox(height: 16),
-        if (requests.isEmpty) const Text('No requests yet. Create one in the student demo first.')
-        else DropdownButtonFormField<int>(initialValue: request?.id,
-          isExpanded: true, decoration: const InputDecoration(labelText: 'Student request'),
-          items: requests.map((r) => DropdownMenuItem(value: r.id,
-            child: Text('#${r.id} • ${r.city} • ${r.roomType}', overflow: TextOverflow.ellipsis))).toList(),
-          validator: (v) => v == null ? 'Choose a request.' : null,
-          onChanged: (v) => setState(() { requirementId = v; roomId = null; price.clear(); })),
-        if (request != null) Padding(padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text('Budget: ${money(request.budget)} / month\nAmenities: ${request.amenities.join(', ')}')),
-        const SizedBox(height: 16),
-        if (rooms.isEmpty) const Text('No available rooms match this request. Add inventory or choose another request.')
-        else DropdownButtonFormField<int>(
-          key: ValueKey('rooms-$requirementId-$roomId'), initialValue: rooms.any((r) => r.id == roomId) ? roomId : null,
-          isExpanded: true, decoration: const InputDecoration(labelText: 'Available room'),
-          items: rooms.map((r) => DropdownMenuItem(value: r.id,
-            child: Text('${r.type} • ${money(r.pricePerBed)}'))).toList(),
-          validator: (v) => v == null ? 'Choose a room.' : null,
-          onChanged: (v) => setState(() {
-            roomId = v;
-            price.text = rooms.firstWhere((r) => r.id == v).pricePerBed.toString();
-          })),
-        const SizedBox(height: 16),
-        TextFormField(controller: price, keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          validator: priceValidator, decoration: const InputDecoration(labelText: 'Monthly offer (PKR)')),
-        const SizedBox(height: 16),
-        TextFormField(controller: note, minLines: 2, maxLines: 4, maxLength: 500,
-          decoration: const InputDecoration(labelText: 'Message (optional)')),
-        const SizedBox(height: 20),
-        FilledButton(onPressed: requests.isEmpty || rooms.isEmpty ? null : submit,
-          child: const Text('Post demo offer')),
-      ])));
-  });
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.gray50,
+      appBar: AppBar(
+        backgroundColor: AppColors.white,
+        elevation: 0,
+        title: const Text('Post a Bid'),
+        leading: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: const Icon(FontAwesomeIcons.chevronLeft, color: AppColors.navy),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.space4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Info Card
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.space3),
+              decoration: BoxDecoration(
+                color: AppColors.greenBg,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: AppColors.green),
+              ),
+              child: Row(
+                children: [
+                  const Icon(FontAwesomeIcons.circleInfo, color: AppColors.green),
+                  const SizedBox(width: AppSpacing.space3),
+                  Expanded(
+                    child: Text(
+                      'Submit your bid to the student. No description needed.',
+                      style: const TextStyle(
+                        fontSize: AppTypography.fontSize_sm,
+                        color: AppColors.green,
+                        fontFamily: AppTypography.fontFamily,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.space6),
+
+            // Form Section
+            const Text(
+              'Bid Details',
+              style: TextStyle(
+                fontSize: AppTypography.fontSize_lg,
+                fontWeight: FontWeight.w700,
+                fontFamily: AppTypography.fontFamily,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.space3),
+
+            AppInputField(
+              label: 'Student Name',
+              placeholder: 'Enter student name',
+              prefixIcon: FontAwesomeIcons.user,
+              controller: studentNameController,
+            ),
+            const SizedBox(height: AppSpacing.space3),
+
+            AppInputField(
+              label: 'Room Type',
+              placeholder: 'e.g., 2-Seater, 3-Seater',
+              prefixIcon: FontAwesomeIcons.bed,
+              controller: roomTypeController,
+            ),
+            const SizedBox(height: AppSpacing.space3),
+
+            AppInputField(
+              label: 'Bid Price (₨)',
+              placeholder: 'Enter monthly price',
+              prefixIcon: FontAwesomeIcons.moneyBill,
+              keyboardType: TextInputType.number,
+              controller: priceController,
+            ),
+            const SizedBox(height: AppSpacing.space8),
+
+            // Submit Button
+            AppButton(
+              text: 'Submit Bid',
+              onPressed: submitBid,
+              icon: FontAwesomeIcons.check,
+            ),
+            const SizedBox(height: AppSpacing.space3),
+
+            AppButton(
+              text: 'Cancel',
+              onPressed: () => Navigator.pop(context),
+              variant: 'outline',
+              icon: FontAwesomeIcons.xmark,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

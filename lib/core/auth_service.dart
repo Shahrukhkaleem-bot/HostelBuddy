@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'app_store.dart';
 import 'supabase_config.dart';
 
 /// Real Google sign-in through Supabase, plus the signed-in user's profile row.
@@ -46,17 +45,15 @@ class AuthService extends ChangeNotifier {
     return null;
   }
 
-  /// Pushes the signed-in identity into the app's profile, so every screen
-  /// shows the real user instead of the sample one.
-  void _syncStoreIdentity() {
-    if (!isSignedIn) return;
-    AppStore.instance.applyIdentity(
-      name: displayName,
-      email: user?.email,
-      avatarUrl: avatarUrl,
-      phone: profile?['phone'] as String?,
-      city: profile?['city'] as String?,
-    );
+  /// Phone and city as saved on the profile, or null when not filled in.
+  String? get phone {
+    final value = profile?['phone'];
+    return value is String && value.isNotEmpty ? value : null;
+  }
+
+  String? get city {
+    final value = profile?['city'];
+    return value is String && value.isNotEmpty ? value : null;
   }
 
   /// Call once before `runApp`.
@@ -157,7 +154,6 @@ class AuthService extends ChangeNotifier {
       } else {
         profile = Map<String, dynamic>.from(rows.first);
       }
-      _syncStoreIdentity();
       notifyListeners();
     } on PostgrestException catch (error) {
       debugPrint('Could not load profile: ${error.message}');

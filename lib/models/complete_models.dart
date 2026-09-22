@@ -42,26 +42,6 @@ class HostelData {
     required this.registeredDate,
   });
 
-  HostelData copyWith({
-    String? name, String? address, String? city, String? description,
-    String? managerName, String? managerPhone, List<String>? amenities,
-    List<RoomData>? rooms, int? totalCapacity, List<HostelReviewData>? reviews,
-    double? overallRating, int? totalReviews, RatingBreakdown? ratingBreakdown,
-  }) => HostelData(
-    id: id, name: name ?? this.name, address: address ?? this.address,
-    city: city ?? this.city, latitude: latitude, longitude: longitude,
-    description: description ?? this.description,
-    managerName: managerName ?? this.managerName,
-    managerPhone: managerPhone ?? this.managerPhone,
-    overallRating: overallRating ?? this.overallRating,
-    totalReviews: totalReviews ?? this.totalReviews,
-    amenities: List.unmodifiable(amenities ?? this.amenities),
-    rooms: List.unmodifiable(rooms ?? this.rooms),
-    totalCapacity: totalCapacity ?? this.totalCapacity, imageUrl: imageUrl,
-    galleryImages: galleryImages, ratingBreakdown: ratingBreakdown ?? this.ratingBreakdown,
-    reviews: List.unmodifiable(reviews ?? this.reviews), registeredDate: registeredDate,
-  );
-
   /// Cheapest bed across all rooms, or 0 when the hostel has no rooms.
   int get minPricePerBed => rooms.isEmpty
       ? 0
@@ -225,28 +205,6 @@ class StudentProfileData {
     required this.totalReviews,
     required this.registeredDate,
   });
-
-  StudentProfileData copyWith({
-    String? name, String? email, String? phone, String? city, String? gender,
-    String? university, String? major, String? profileImage, String? bio,
-    List<String>? documents, bool? isVerified,
-  }) => StudentProfileData(
-    id: id,
-    name: name ?? this.name,
-    email: email ?? this.email,
-    phone: phone ?? this.phone,
-    city: city ?? this.city,
-    gender: gender ?? this.gender,
-    university: university ?? this.university,
-    major: major ?? this.major,
-    profileImage: profileImage ?? this.profileImage,
-    bio: bio ?? this.bio,
-    documents: List.unmodifiable(documents ?? this.documents),
-    isVerified: isVerified ?? this.isVerified,
-    rating: rating,
-    totalReviews: totalReviews,
-    registeredDate: registeredDate,
-  );
 }
 
 // Analytics Data

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../core/app_store.dart';
 import '../core/auth_service.dart';
 import '../core/constants.dart';
 import '../widgets/app_button.dart';
@@ -9,14 +8,15 @@ class UserProfileScreen extends StatelessWidget {
   const UserProfileScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) => StoreBuilder(
-        builder: (context, store) => _build(context, store),
+  // Rebuilds whenever the signed-in profile changes.
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: AuthService.instance,
+        builder: (context, _) => _build(context, AuthService.instance),
       );
 
-  Widget _build(BuildContext context, AppStore store) {
-    final profile = store.profile;
-    final role = AuthService.instance.role;
-    final avatar = profile.profileImage;
+  Widget _build(BuildContext context, AuthService auth) {
+    final role = auth.role;
+    final avatar = auth.avatarUrl ?? '';
     final hasPhoto = avatar.startsWith('http');
 
     return Scaffold(
@@ -104,7 +104,7 @@ class UserProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.space4),
                   Text(
-                    profile.name,
+                    auth.displayName,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: AppTypography.fontSize_2xl,
@@ -143,19 +143,19 @@ class UserProfileScreen extends StatelessWidget {
             _InfoCard(
               icon: FontAwesomeIcons.envelope,
               label: 'Email',
-              value: profile.email.isEmpty ? 'Not added yet' : profile.email,
+              value: auth.user?.email ?? 'Not added yet',
             ),
             const SizedBox(height: AppSpacing.space2),
             _InfoCard(
               icon: FontAwesomeIcons.phone,
               label: 'Phone',
-              value: profile.phone.isEmpty ? 'Not added yet' : profile.phone,
+              value: auth.phone ?? 'Not added yet',
             ),
             const SizedBox(height: AppSpacing.space2),
             _InfoCard(
               icon: FontAwesomeIcons.mapPin,
               label: 'City',
-              value: profile.city.isEmpty ? 'Not added yet' : profile.city,
+              value: auth.city ?? 'Not added yet',
             ),
             const SizedBox(height: AppSpacing.space6),
 
@@ -256,7 +256,6 @@ class UserProfileScreen extends StatelessWidget {
                           onPressed: () async {
                             final navigator = Navigator.of(context);
                             await AuthService.instance.signOut();
-                            AppStore.instance.signOut();
                             navigator.pushNamedAndRemoveUntil(
                               '/google-auth',
                               (route) => false,
