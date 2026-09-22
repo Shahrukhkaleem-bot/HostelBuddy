@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../core/app_store.dart';
+
 import '../core/auth_service.dart';
 import '../core/constants.dart';
 import '../widgets/app_button.dart';
@@ -42,15 +42,12 @@ class _StudentProfileCompletionScreenState extends State<StudentProfileCompletio
   @override
   void initState() {
     super.initState();
-    final profile = AppStore.instance.profile;
-    nameController.text = profile.name;
-    phoneController.text = profile.phone;
-    emailController.text = profile.email;
-    cityController.text = profile.city;
-    selectedGender = profile.gender.isEmpty ? 'Male' : profile.gender;
-    universityController.text = profile.university;
-    majorController.text = profile.major;
-    bioController.text = profile.bio;
+    // Start from what the account already knows about the user.
+    final auth = AuthService.instance;
+    nameController.text = auth.displayName;
+    phoneController.text = auth.phone ?? '';
+    emailController.text = auth.user?.email ?? '';
+    cityController.text = auth.city ?? '';
   }
 
   @override
@@ -124,33 +121,14 @@ class _StudentProfileCompletionScreenState extends State<StudentProfileCompletio
   }
 
   Future<void> _save() async {
-    final store = AppStore.instance;
-    final name = nameController.text.trim();
-    final phone = phoneController.text.trim();
-    final city = cityController.text.trim();
-
-    // Local profile first, so the app updates even if the network is down.
-    store.saveProfile(store.profile.copyWith(
-      name: name,
-      email: emailController.text.trim(),
-      phone: phone,
-      city: city,
-      gender: selectedGender,
-      university: universityController.text.trim(),
-      major: majorController.text.trim(),
-      bio: bioController.text.trim(),
-      isVerified: documentsVerified,
-    ));
-
     final error = await AuthService.instance.saveProfileDetails(
-      fullName: name,
-      phone: phone,
-      city: city,
+      fullName: nameController.text.trim(),
+      phone: phoneController.text.trim(),
+      city: cityController.text.trim(),
     );
     if (!mounted) return;
 
     if (error != null) {
-      // Saved on this device, but not in the account.
       ToastHelper.showWarning(context, message: error);
       return;
     }

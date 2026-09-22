@@ -19,7 +19,7 @@ class AppColors {
   static const Color gray900 = Color(0xFF1A1A2E);
 
   // Green - success / accents
-  static const Color green = Color(0xFF00866A);
+  static const Color green = Color(0xFF00B894);
   static const Color greenLight = Color(0xFF55EFC4);
   static const Color greenDark = Color(0xFF009973);
   static const Color greenBg = Color(0xFFE6F9F3);
@@ -32,7 +32,7 @@ class AppColors {
 
   // Success states
   static const Color successLight = Color(0xFFE6F9F3);
-  static const Color successMain = Color(0xFF00866A);
+  static const Color successMain = Color(0xFF00B894);
   static const Color successDark = Color(0xFF009973);
 
   // Info/Highlight
@@ -65,7 +65,7 @@ class AppRadius {
 }
 
 class AppTypography {
-  static const String fontFamily = 'Roboto';
+  static const String fontFamily = 'Inter';
 
   static const double fontSize_xs = 11.0;
   static const double fontSize_sm = 13.0;

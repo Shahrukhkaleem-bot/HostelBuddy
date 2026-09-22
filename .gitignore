@@ -31,6 +31,8 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+# Gradle writes build output here too, which /build/ alone does not cover.
+android/build/
 /coverage/
 
 # Symbolication related

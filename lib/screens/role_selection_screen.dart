@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../core/app_store.dart';
 import '../core/auth_service.dart';
 import '../core/constants.dart';
 import '../widgets/app_button.dart';
@@ -41,7 +40,6 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       return;
     }
 
-    AppStore.instance.setRole(role);
     Navigator.pushReplacementNamed(
       context,
       role == 'student' ? '/student-main' : '/hostel-registration',
